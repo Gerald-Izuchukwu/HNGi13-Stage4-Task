@@ -4,6 +4,8 @@ import sys provides access to some variables used or maintained by the interpret
 import ipaddress is a module for creating, manipulating and validating IP addresses and networks
 
 story
+once a vpc is created and subnets are attached via veth pairs, intra comm between subnets are possible but to the internet isnt 
+
 so to crete a vpc we need to create a linux bridge that will act as the vpc router, the central hub
 this router is what switches/routes traffic between subnets in our vpc
 the subnets are created usinng network namespaces which are like lightweight virtual machines
@@ -94,3 +96,17 @@ ip link show: this list all the network bridges
  ip addr show br-main-br: this shows the details of the bridge including its IP address
  ip netns list: this lists all the network namespaces (subnets) created
 
+sysctl -w net.ipv4.ip_forward=1
+This enables IP forwarding on the host machine. Without this, 
+even if packets leave your subnet, the host won’t pass them along to the outside network
+if it is set to 0 port forwarding is disabled
+
+iptables -t nat -A POSTROUTING -s SUBNET_CIDR -o EXTERNAL_IF -j MASQUERADE
+This command sets up NAT (Network Address Translation), 
+which rewrites the source IP of outgoing packets so they can reach the internet and return correctly.
+So we are basically modifying the source IP for the packets to successfully go and return
+-t nat tells it to use the nat routeTable
+-A POSTROUTING ensures the source IP is rewritten after routing, before it hits the internet.
+-s SUBNET_CIDR ie the sourceIP filter that says that only packets coming from this IP range should be allowed to pass to the internet
+-o EXTERNAL_IF this means output interface. Only packets leaving through this interface are NATed. Example: -o eth0 means the host’s external network interface that connects to the real internet.
+-j MASQUERADE jump target. When the response comes back, the kernel knows to send it to the original internal subnet host.
