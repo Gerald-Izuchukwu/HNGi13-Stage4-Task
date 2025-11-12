@@ -110,3 +110,9 @@ So we are basically modifying the source IP for the packets to successfully go a
 -s SUBNET_CIDR ie the sourceIP filter that says that only packets coming from this IP range should be allowed to pass to the internet
 -o EXTERNAL_IF this means output interface. Only packets leaving through this interface are NATed. Example: -o eth0 means the host’s external network interface that connects to the real internet.
 -j MASQUERADE jump target. When the response comes back, the kernel knows to send it to the original internal subnet host.
+
+????AAAAA???
+run(f"ip address add {bridge_cidr} dev {bridge_name}") eg run(f"ip address add 10.0.0.1/16 dev {bridge_name}")
+this command gives a vpc the first IP in the cidr as the bridge IP ie 10.0.0.1 and then allows any IP in the vpc
+network mask to communicate freely with it ie since it /16 the first 16 bits are fixed so network mask is 10.0.x.x 
+ie any ip adress with 10.0.x.x can freely communicate with the vpc
